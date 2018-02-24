@@ -1,111 +1,97 @@
 var driver = IR.GetDevice("yamaha");
-var list = IR.GetPopup('server').GetItem('List 1');
+var serverList = IR.GetPopup('server').GetItem('List 1');
 var curPopup;
-var layer;
-var nextLayer;
-var temp;
-var temptemp;
-var index = 0;
+var serverFiles;
+var index;
 var arr = [];
-var back = false;
-var sSelect = false,nSelect = false;
-var flag = 0;
-var isback = 0;
-// var first = fal
 
-function createList()
+function createList(l)
 {
-	list.Template = 'listTemplate';
+	l.Template = 'listTemplate';
 	// curPopup = popup;
 }
 
-function add(text,image)
+function add(text,image,l)
 {
-	 // count items in list
-	var current = list.ItemsCount; 
+	// count items in list
+	var current = l.ItemsCount; 
 	var curplus = current++;
- // create one more item and add the text   
-	list.CreateItem(curplus, 3, {Text: text});
-	list.CreateItem(curplus, 2, {Image: image});
+ 	// create one more item and add the text   
+	l.CreateItem(curplus, 3, {Text: text});
+	l.CreateItem(curplus, 2, {Image: image});
 }
 
-IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text) 
+function fillDirectory(obj,popup)
 {
-	// IR.Log(isback);
-   if(curPopup == 'server')
-   {
-	temp = JSON.Parse(text);
-	//IR.Log(temp.menu_name);
-	if(temp.menu_name)
+	if(obj.menu_name)
 	{
-		IR.GetPopup('server').GetItem('Item 2').Text = temp.menu_name;
-		IR.GetPopup('server').GetItem('Item 2').Visible = true;
+		IR.GetPopup(popup).GetItem('Item 2').Text = obj.menu_name;
+		IR.GetPopup(popup).GetItem('Item 2').Visible = true;
 	}
-	if(temp.response_code == 0)
+	if(obj.response_code == 0)
 	{
-		if(temp.max_line)
+		if(obj.max_line)
 		{
-			if(temp.max_line >= 8)
+			if(obj.max_line >= 8)
 			{
-				if(index<temp.max_line)
+				if(index<obj.max_line)
 				{
-					IR.GetPopup('server').GetItem('Item 1').Enable = false;
-					for(var i = 0;i<temp.list_info.length;i++)
+					IR.GetPopup(popup).GetItem('Item 1').Enable = false;
+					for(var i = 0;i<obj.list_info.length;i++)
 					{
-							// IR.Log(temp.menu_layer);
-							if(temp.list_info[i].attribute == '2'||temp.list_info[i].attribute == '125829122')
-							{
-								add(temp.list_info[i].text,'resource_1.png');
-								arr.push('d');
-							}
-							else
-							{
-								add(temp.list_info[i].text,temp.list_info[i].thumbnail);
-								arr.push('f');                       
-							}
-
+						if(obj.list_info[i].attribute == '2'||obj.list_info[i].attribute == '125829122')
+						{
+							add(obj.list_info[i].text,'resource_1.png',serverList);
+							arr.push('d');
+						}
+						else
+						{
+							add(obj.list_info[i].text,obj.list_info[i].thumbnail,serverList);
+							arr.push('f');                       
+						}
 					}
-					if(temp.list_info.length<8)
+					if(obj.list_info.length<8)
 					{
 					}
 					else
 					{
-						// IR.Log(temp.menu_layer);
 						index = index + 8;
 						driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index='+index+'&size=8']);
 					}   
 				}	
 			}
-
-/*			else
-			{
-				IR.GetPopup('server').GetItem('Item 1').Enable = true;
-			}*/
 			else
 			{
-				// IR.GetPopup('server').GetItem('Item 1').Enable = false;
-				for(var i = 0;i<temp.list_info.length;i++)
+				for(var i = 0;i<obj.list_info.length;i++)
 				{
-						// IR.Log(temp.menu_layer);
-						if(temp.list_info[i].attribute == '2'||temp.list_info[i].attribute == '125829122')
-						{
-							add(temp.list_info[i].text,'resource_1.png',list);
-							arr.push('d');
-						}
-						else
-						{
-							add(temp.list_info[i].text,temp.list_info[i].thumbnail,list);
-							arr.push('f');                        
-						}
-
+					if(obj.list_info[i].attribute == '2'||obj.list_info[i].attribute == '125829122')
+					{
+						add(obj.list_info[i].text,'resource_1.png',serverList);
+						arr.push('d');
+					}
+					else
+					{
+						add(obj.list_info[i].text,obj.list_info[i].thumbnail,serverList);
+						arr.push('f');                        
+					}
 				}
 
 			}
-			if(index+8>temp.max_line)
-				IR.GetPopup('server').GetItem('Item 1').Enable = true;
+			if(index+8>obj.max_line)
+				IR.GetPopup(popup).GetItem('Item 1').Enable = true;
 		}
 	}
-   }
+}
+
+IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text) 
+{
+	switch(curPopup)
+	{
+		case 'server':
+			serverFiles = JSON.Parse(text);
+			fillDirectory(serverFiles,curPopup);
+			break;
+	}
 });
 
 
@@ -113,19 +99,17 @@ IR.AddListener(IR.EVENT_ITEM_SELECT,IR.GetPopup('server').GetItem('List 1'), fun
 {
 	if(arr[item]=='d')
 	{
-		list.Clear();
-		createList('server',list);
+		serverList.Clear();
+		createList(serverList);
 		driver.Send(['GET,/YamahaExtendedControl/v1/netusb/setListControl?type=select&index='+item+'']);
 		driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index=0&size=8']);
-
 	}
 	if(arr[item]=='f')
 	{
 		driver.Send(['GET,/YamahaExtendedControl/v1/netusb/setListControl?list_id=main&type=play&index='+item+'']);
-      curPopup = 'playback';
+      	curPopup = 'playback';
 		IR.ShowPopup("playback");
-		IR.HidePopup("server");
-      
+		IR.HidePopup("server");  
 	}
 	index = 0;
 	arr.length = 0;     
@@ -134,33 +118,29 @@ IR.AddListener(IR.EVENT_ITEM_SELECT,IR.GetPopup('server').GetItem('List 1'), fun
 // back to previous or out from server
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("Item 1"), function ()
 {
-	// back = !back;
-	// IR.Log(back+' '+sSelect+' '+nSelect+' '+flag);
-	if(temp.menu_layer > 0)
+	if(serverFiles.menu_layer > 0)
 	{
-			// IR.Log('need to clear next!');
-			index = 0;
-			arr.length = 0;
-			list.Clear();
-			createList('server',list);
-			driver.Send(['GET,/YamahaExtendedControl/v1/netusb/setListControl?type=return']);
-			driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index=0&size=8']);
+		index = 0;
+		arr.length = 0;
+		serverList.Clear();
+		createList(serverList);
+		driver.Send(['GET,/YamahaExtendedControl/v1/netusb/setListControl?type=return']);
+		driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index=0&size=8']);
 	}
 	else
 	{
 		IR.HidePopup("server");
-		list.Clear();
+		serverList.Clear();
 		arr.length = 0;
 		index = 0;
 	}
-	// flag = 1;
 });
 
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetItem("Страница 1").GetItem("server"), function ()
 {
 	curPopup = 'server';
-	list.Clear();
-	createList('server',list);
+	serverList.Clear();
+	createList(serverList);
 	index = 0;
 	driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=server']);
 	driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index=0&size=8']);
@@ -170,8 +150,8 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetItem("Страница 1").GetItem("se
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetItem("Страница 1").GetItem("net_radio"), function ()
 {
 	curPopup = 'server';
-	list.Clear();
-	createList('server',list);
+	serverList.Clear();
+	createList(serverList);
 	index = 0;
 	driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=net_radio']);
 	driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index=0&size=8']);
