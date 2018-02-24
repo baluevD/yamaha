@@ -112,6 +112,4 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
       IR.GetPopup('playback').GetItem('device').Text = temp_.usb_devicetype;         
    }
    }
-
-
 });
