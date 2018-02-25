@@ -33,8 +33,8 @@ function fillDirectory(obj,popup)
 {
     if(obj.menu_name)
     {
-        IR.GetPopup(popup).GetItem('Item 2').Text = obj.menu_name;
-        IR.GetPopup(popup).GetItem('Item 2').Visible = true;
+        IR.GetPopup('server').GetItem('Item 2').Text = obj.menu_name;
+        IR.GetPopup('server').GetItem('Item 2').Visible = true;
     }
     if(obj.response_code == 0)
     {
@@ -44,7 +44,7 @@ function fillDirectory(obj,popup)
             {
                 if(index<obj.max_line)
                 {
-                    IR.GetPopup(popup).GetItem('Item 1').Enable = false;
+                    IR.GetPopup('server').GetItem('Item 1').Enable = false;
                     for(var i = 0;i<obj.list_info.length;i++)
                     {
                         if(obj.list_info[i].attribute == '2'||obj.list_info[i].attribute == '125829122')
@@ -86,7 +86,7 @@ function fillDirectory(obj,popup)
 
             }
             if(index+8>obj.max_line)
-                IR.GetPopup(popup).GetItem('Item 1').Enable = true;
+                IR.GetPopup('server').GetItem('Item 1').Enable = true;
         }
     }
 }
@@ -239,7 +239,6 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                     IR.GetPopup('settings').GetItem("equalizer").Value = 1;
                 if(settingsInfo.equalizer['mode'] == 'auto')
                     IR.GetPopup('settings').GetItem("equalizer").Value = 0;
-
                 if(settingsInfo.equalizer['mode'])
                     IR.GetPopup('settings').GetItem('equalizer').Text = settingsInfo.equalizer['mode'];*/
 /*                if(settingsInfo.equalizer['low'])
@@ -518,22 +517,18 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("add_bookmar
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=0']);
 });
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("30"), function ()
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=30']);
 });
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("60"), function ()
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=60']);
 });
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("90"), function ()
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=90']);
 });
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("120"), function ()
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=120']);
@@ -582,31 +577,26 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup('settings').GetItem("bass_extens
     var low = IR.GetPopup("settings").GetItem("low").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&low='+low+'']);  
 });
-
 IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("low"), function ()
 {
     var low = IR.GetPopup("settings").GetItem("low").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&low='+low+'']);   
 });
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("mid"), function ()
 {
     var mid = IR.GetPopup("settings").GetItem("mid").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&mid='+mid+'']);  
 });
-
 IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("mid"), function ()
 {
     var mid = IR.GetPopup("settings").GetItem("mid").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&mid='+mid+'']);   
 });
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("high"), function ()
 {
     var high = IR.GetPopup("settings").GetItem("high").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&high='+high+'']);  
 });
-
 IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("high"), function ()
 {
     var high = IR.GetPopup("settings").GetItem("high").Value;
