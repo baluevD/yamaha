@@ -6,6 +6,7 @@ var playInfo;
 var serverFiles;
 var index;
 var status;
+var presetCounter = 0;
 var arr = [];
 
 function createList(l)
@@ -292,4 +293,15 @@ IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("playback").GetItem("volume"),
 IR.AddListener(IR.EVENT_ITEM_SHOW, IR.GetPopup("playback"), function ()
 {
    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getPlayInfo']);   
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("store_preset"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/storePreset?num='+presetCounter+'']);
+    presetCounter++;  
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("add_bookmark"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/manageList?list_id=main&type=add_bookmark&timeout=500']);
 });
