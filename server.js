@@ -7,6 +7,7 @@ var settingsInfo;
 var serverFiles;
 var net_radioFiles;
 var usbFiles;
+var recentFiles;
 var index;
 var status;
 var presetCounter = 0;
@@ -112,6 +113,37 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
             IR.Log('usb '+text);
             usbFiles = JSON.Parse(text);
             fillDirectory(usbFiles,curPopup);
+            break;
+        case 'recent':
+            IR.Log(text);
+            recentFiles = JSON.Parse(text);
+            IR.GetPopup('server').GetItem('Item 2').Text = 'History';
+            IR.GetPopup('server').GetItem('Item 2').Visible = true;
+            IR.GetPopup('server').GetItem('clear').Visible = true;
+            if(recentFiles.response_code == 0)
+            {
+                IR.GetPopup('server').GetItem('Item 1').Enable = false;
+                if(recentFiles.recent_info[i].text)
+                {
+                    for(var i = 0;i<recentFiles.recent_info.length;i++)
+                    {
+/*                    if(recentFiles.recent_info[i].attribute == '2'||recentFiles.recent_info[i].attribute == '125829122')
+                    {
+                        IR.Log(recentFiles.recent_info[i].text);
+                        add(recentFiles.recent_info[i].text,'resource_1.png',serverList);
+                        arr.push('d');
+                    }
+                    else
+                    {*/
+                        IR.Log('f'+recentFiles.recent_info[i].text);
+                        add(recentFiles.recent_info[i].text,recentFiles.recent_info[i].albumart_url,serverList);
+                        arr.push('f');                       
+                    // }
+                    }
+                }
+
+            }
+            IR.GetPopup('server').GetItem('Item 1').Enable = true;
             break;
         case 'playback':
             playInfo = JSON.Parse(text);
@@ -298,6 +330,14 @@ IR.AddListener(IR.EVENT_ITEM_SELECT,IR.GetPopup('server').GetItem('List 1'), fun
         case 'usb':
             selectItem(curPopup,item);
             break;
+        case 'recent':
+            driver.Send(['GET,/YamahaExtendedControl/v1/netusb/recallRecentItem?zone=main&num='+item+'']);
+            curPopup = 'playback';
+            IR.ShowPopup("playback");
+            IR.HidePopup("server");  
+            index = 0;
+            arr.length = 0; 
+            break;
     }        
 });
 
@@ -314,6 +354,14 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("Item 1"), fun
             break;
         case 'usb':
             returnUp(curPopup,usbFiles);
+            break;
+        case 'recent':
+            IR.HidePopup("server");
+            serverList.Clear();
+            arr.length = 0;
+            index = 0;
+            recentFiles = 0;
+            IR.GetPopup('server').GetItem('clear').Visible = false;
             break;
     }
 });
@@ -348,6 +396,17 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("usb"), function ()
     index = 0;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=usb']);
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=usb&index=0&size=8']);
+    IR.ShowPopup('server');  
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("recent"), function ()
+{
+    curPopup = 'recent';
+    serverList.Clear();
+    createList(serverList);
+    index = 0;
+    // driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=usb']);
+    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getRecentInfo']);
     IR.ShowPopup('server');  
 });
 
@@ -578,4 +637,14 @@ IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("subwoofer
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSubwooferVolume?volume='+sub+'']);   
 });
 
-
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("clear"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/clearRecentInfo']);
+    serverList.Clear();
+    createList(serverList);
+    index = 0;
+    arr = 0;
+    // driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=usb']);
+    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getRecentInfo']);
+    // IR.ShowPopup('server');
+});
