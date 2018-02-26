@@ -119,28 +119,18 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
             recentFiles = JSON.Parse(text);
             IR.GetPopup('server').GetItem('Item 2').Text = 'History';
             IR.GetPopup('server').GetItem('Item 2').Visible = true;
-            IR.GetPopup('server').GetItem('clear').Visible = true;
             if(recentFiles.response_code == 0)
             {
                 IR.GetPopup('server').GetItem('Item 1').Enable = false;
-                if(recentFiles.recent_info[i].text)
-                {
+                // if(recentFiles.recent_info[i].text)
+                // {
                     for(var i = 0;i<recentFiles.recent_info.length;i++)
                     {
-/*                    if(recentFiles.recent_info[i].attribute == '2'||recentFiles.recent_info[i].attribute == '125829122')
-                    {
-                        IR.Log(recentFiles.recent_info[i].text);
-                        add(recentFiles.recent_info[i].text,'resource_1.png',serverList);
-                        arr.push('d');
-                    }
-                    else
-                    {*/
                         IR.Log('f'+recentFiles.recent_info[i].text);
                         add(recentFiles.recent_info[i].text,recentFiles.recent_info[i].albumart_url,serverList);
                         arr.push('f');                       
-                    // }
                     }
-                }
+                // }
 
             }
             IR.GetPopup('server').GetItem('Item 1').Enable = true;
@@ -188,36 +178,6 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
             settingsInfo = JSON.Parse(text);
             if(settingsInfo.response_code == 0)
             {
-/*                if(settingsInfo.sleep)
-                {
-                    IR.GetPopup('settings').GetItem('sleep').Text = settingsInfo.sleep;
-                    IR.Log(settingsInfo.sleep);
-                    switch(settingsInfo.sleep)
-                    {
-                        case '0':
-                            IR.GetPopup('sleep').GetItem('off').Value = 1;
-                            IR.GetPopup('settings').GetItem('sleep').Text = '0';
-                            break;
-                        case '30':
-                            IR.GetPopup('sleep').GetItem('30').Value = 1;
-                            IR.GetPopup('settings').GetItem('sleep').Text = '30';
-                            break;
-                        case '60':
-                            IR.GetPopup('sleep').GetItem('60').Value = 1;
-                            IR.GetPopup('settings').GetItem('sleep').Text = '60';
-                            break;
-                        case '90':
-                            IR.GetPopup('sleep').GetItem('90').Value = 1;
-                            IR.GetPopup('settings').GetItem('sleep').Text = '90';
-                            break;
-                        case '120':
-                            IR.GetPopup('sleep').GetItem('120').Value = 1;
-                            IR.GetPopup('settings').GetItem('sleep').Text = '120';
-                            break;          
-                    }
-                }*/
-
-                
                 if(settingsInfo.mute == 'false')
                     IR.GetPopup('settings').GetItem("mute").Value = 1;
                 if(settingsInfo.mute == 'true')
@@ -230,23 +190,6 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                     IR.GetPopup('settings').GetItem("enahncer").Value = 1;
                 if(settingsInfo.enhancer == 'true')
                     IR.GetPopup('settings').GetItem("enhancer").Value = 0;
-                    // IR.GetPopup('settings').GetItem('mute').Text = settingsInfo.mute;
-/*                if(settingsInfo.direct)
-                    IR.GetPopup('settings').GetItem('direct').Text = settingsInfo.direct;*/
-/*                if(settingsInfo.enhancer)
-                    IR.GetPopup('settings').GetItem('enhancer').Text = settingsInfo.enhancer;*/
-/*                if(settingsInfo.equalizer['mode'] == 'manual')
-                    IR.GetPopup('settings').GetItem("equalizer").Value = 1;
-                if(settingsInfo.equalizer['mode'] == 'auto')
-                    IR.GetPopup('settings').GetItem("equalizer").Value = 0;
-                if(settingsInfo.equalizer['mode'])
-                    IR.GetPopup('settings').GetItem('equalizer').Text = settingsInfo.equalizer['mode'];*/
-/*                if(settingsInfo.equalizer['low'])
-                    IR.GetPopup('settings').GetItem('low').Value = settingsInfo.equalizer['low'];
-                if(settingsInfo.equalizer.mid)
-                    IR.GetPopup('settings').GetItem('mid').Value = settingsInfo.equalizer.mid;
-                if(settingsInfo.equalizer.high)
-                    IR.GetPopup('settings').GetItem('high').Value = settingsInfo.equalizer.high;*/
                  if(settingsInfo.balance)
                     IR.GetPopup('settings').GetItem('balance').Value = settingsInfo.balance;
                 if(settingsInfo.subwoofer_volume)
@@ -256,8 +199,6 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                     IR.GetPopup('settings').GetItem("bass_extension").Value = 1;
                 if(settingsInfo.bass_extension == 'true')
                     IR.GetPopup('settings').GetItem("bass_extension").Value = 0;
-/*                if(settingsInfo.bass_extension)
-                    IR.GetPopup('settings').GetItem('bass_extension').Text = settingsInfo.bass_extension;*/
             }
             if(playInfo.usb_devicetype)
                 IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
@@ -360,7 +301,6 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("Item 1"), fun
             arr.length = 0;
             index = 0;
             recentFiles = 0;
-            IR.GetPopup('server').GetItem('clear').Visible = false;
             break;
     }
 });
@@ -404,7 +344,6 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("recent"), function ()
     serverList.Clear();
     createList(serverList);
     index = 0;
-    // driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=usb']);
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getRecentInfo']);
     IR.ShowPopup('server');  
 });
@@ -497,11 +436,6 @@ IR.AddListener(IR.EVENT_ITEM_SHOW, IR.GetPopup("settings"), function ()
    curPopup = 'settings';   
 });
 
-/*IR.AddListener(IR.EVENT_ITEM_SHOW, IR.GetPopup("sleep"), function ()
-{
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/getStatus']);  
-});*/
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("store_preset"), function ()
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/storePreset?num='+presetCounter+'']);
@@ -512,27 +446,6 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("add_bookmar
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/manageList?list_id=main&type=add_bookmark&timeout=500']);
 });
-
-/*IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("off"), function ()
-{
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=0']);
-});
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("30"), function ()
-{
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=30']);
-});
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("60"), function ()
-{
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=60']);
-});
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("90"), function ()
-{
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=90']);
-});
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("sleep").GetItem("120"), function ()
-{
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setSleep?sleep=120']);
-});*/
 
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("volume"), function ()
 {
@@ -572,37 +485,6 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup('settings').GetItem("bass_extens
         driver.Send(['GET,/YamahaExtendedControl/v1/main/setBassExtension?enable=false']);
 });
 
-/*IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("low"), function ()
-{
-    var low = IR.GetPopup("settings").GetItem("low").Value;
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&low='+low+'']);  
-});
-IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("low"), function ()
-{
-    var low = IR.GetPopup("settings").GetItem("low").Value;
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&low='+low+'']);   
-});
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("mid"), function ()
-{
-    var mid = IR.GetPopup("settings").GetItem("mid").Value;
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&mid='+mid+'']);  
-});
-IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("mid"), function ()
-{
-    var mid = IR.GetPopup("settings").GetItem("mid").Value;
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&mid='+mid+'']);   
-});
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("high"), function ()
-{
-    var high = IR.GetPopup("settings").GetItem("high").Value;
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&high='+high+'']);  
-});
-IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("high"), function ()
-{
-    var high = IR.GetPopup("settings").GetItem("high").Value;
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setEqualizer?mode=manual&high='+high+'']);   
-});*/
-
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("balance"), function ()
 {
     var balance = IR.GetPopup("settings").GetItem("balance").Value;
@@ -625,16 +507,4 @@ IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("subwoofer
 {
     var sub = IR.GetPopup("settings").GetItem("subwoofer_volume").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSubwooferVolume?volume='+sub+'']);   
-});
-
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("clear"), function ()
-{
-    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/clearRecentInfo']);
-    serverList.Clear();
-    createList(serverList);
-    index = 0;
-    arr = 0;
-    // driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=usb']);
-    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getRecentInfo']);
-    // IR.ShowPopup('server');
 });
