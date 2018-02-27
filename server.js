@@ -3,15 +3,19 @@ var serverList = IR.GetPopup('server').GetItem('List 1');
 var page = IR.GetPopup("main");
 var curPopup;
 var playInfo;
+var tunerInfo;
 var settingsInfo;
 var serverFiles;
 var net_radioFiles;
 var usbFiles;
 var recentFiles;
+var tunerPresetFiles;
 var index;
 var status;
 var presetCounter = 0;
+var presetTunerCounter = 0;
 var arr = [];
+var band = 'fm';
 
 function createList(l)
 {
@@ -27,6 +31,17 @@ function add(text,image,l)
     // create one more item and add the text   
     l.CreateItem(curplus, 3, {Text: text});
     l.CreateItem(curplus, 2, {Image: image});
+}
+
+function addTuner(number,band,l)
+{
+    // count items in list
+    var current = l.ItemsCount; 
+    var curplus = current++;
+    // create one more item and add the text   
+    l.CreateItem(curplus, 3, {Text: number});
+    l.CreateItem(curplus, 2, {Text: band});
+    l.CreateItem(curplus, 2, {Image: ''});
 }
 
 function fillDirectory(obj,popup)
@@ -116,8 +131,29 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
             break;
         case 'recent':
             IR.Log(text);
-            recentFiles = JSON.Parse(text);
+            tunerPresetFiles = JSON.Parse(text);
             IR.GetPopup('server').GetItem('Item 2').Text = 'History';
+            IR.GetPopup('server').GetItem('Item 2').Visible = true;
+            if(tunerPresetFiles.response_code == 0)
+            {
+                IR.GetPopup('server').GetItem('Item 1').Enable = false;
+                // if(recentFiles.recent_info[i].text)
+                // {
+                    for(var i = 0;i<tunerPresetFiles.preset_info.length;i++)
+                    {
+                        // IR.Log('f'+recentFiles.recent_info[i].text);
+                        addTuner(tunerPresetFiles.preset_info[i].number,tunerPresetFiles.preset_info[i].band,serverList);
+                        // arr.push('f');                       
+                    }
+                // }
+
+            }
+            IR.GetPopup('server').GetItem('Item 1').Enable = true;
+            break;
+        case 'tunerPreset':
+            IR.Log(text);
+            recentFiles = JSON.Parse(text);
+            IR.GetPopup('server').GetItem('Item 2').Text = 'Tuner Preset';
             IR.GetPopup('server').GetItem('Item 2').Visible = true;
             if(recentFiles.response_code == 0)
             {
@@ -171,6 +207,28 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                 });
                 if(playInfo.usb_devicetype)
                     IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
+            }
+            else
+                // IR.HidePopup('playback');
+                IR.ShowPopup('server');
+        case 'tuner':
+            tunerInfo = JSON.Parse(text);
+            if(tunerInfo.response_code == 0)
+            {
+                if(tunerInfo.band == 'am')
+                {
+                    IR.GetPopup('tuner').GetItem('units').Value = 1;
+                    IR.GetPopup('tuner').GetItem('band').Value = 1;
+                    IR.GetPopup('tuner').GetItem('frequency').Value = tunerInfo.am.freq;
+                    band = 'am';
+                }
+                if(tunerInfo.band == 'fm')
+                {
+                    IR.GetPopup('tuner').GetItem('units').Value = 0;
+                    IR.GetPopup('tuner').GetItem('band').Value = 0;
+                    IR.GetPopup('tuner').GetItem('frequency').Value = tunerInfo.fm.freq;
+                    band = 'fm';
+                }
             }
             else
                 // IR.HidePopup('playback');
@@ -284,6 +342,14 @@ IR.AddListener(IR.EVENT_ITEM_SELECT,IR.GetPopup('server').GetItem('List 1'), fun
             index = 0;
             arr.length = 0; 
             break;
+        case 'tunerPreset':
+            driver.Send(['GET,/YamahaExtendedControl/v1/tuner/recallPreset?zone=main&band='+band+'&num='+item+'']);
+            curPopup = 'tuner';
+            IR.ShowPopup("tuner");
+            IR.HidePopup("server");  
+            index = 0;
+            arr.length = 0; 
+            break;
     }        
 });
 
@@ -310,6 +376,14 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("Item 1"), fun
             index = 0;
             recentFiles = 0;
             break;
+        case 'tunerPreset':
+            IR.ShowPopup("main");
+            IR.GetPopup('server').GetItem('Item 2').Text = '';
+            serverList.Clear();
+            arr.length = 0;
+            index = 0;
+            presetTunerFiles = 0;
+            break;
     }
 });
 
@@ -324,6 +398,20 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("server"), function ()
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=server']);
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index=0&size=8']);
     IR.ShowPopup('server');  
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("tuner"), function ()
+{
+    curPopup = 'tuner';
+    page.GetItem("aux").Value = 0;
+    page.GetItem("optical").Value = 0;
+    serverList.Clear();
+    createList(serverList);
+    index = 0;
+    driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=tuner']);
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/getPlayInfo']);
+    // driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getListInfo?input=server&index=0&size=8']);
+    IR.ShowPopup('tuner');  
 });
 
 IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("net_radio"), function ()
@@ -455,7 +543,10 @@ IR.AddListener(IR.EVENT_ITEM_SHOW, IR.GetPopup("settings"), function ()
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("store_preset"), function ()
 {
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/storePreset?num='+presetCounter+'']);
-    presetCounter++;  
+    if(presetCounter<40)
+        presetCounter++;
+    else
+        presetCounter = 0;  
 });
 
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("add_bookmark"), function ()
@@ -564,3 +655,95 @@ function checkPlayback()
     page.GetItem("aux").Value = 0;
     page.GetItem("optical").Value = 0;
 }
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("am"), function ()
+{
+    // var val = IR.GetPopup("settings").GetItem("volume").Value;
+    band = 'am';
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setBand?band='+band+'']);
+    IR.GetPopup("tuner").GetItem("band").Value = 1;
+    IR.GetPopup("tuner").GetItem("units").Value = 1;
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("fm"), function ()
+{
+    // var val = IR.GetPopup("settings").GetItem("volume").Value;
+    band = 'fm';
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setBand?band='+band+'']);
+    IR.GetPopup("tuner").GetItem("band").Value = 0;
+    IR.GetPopup("tuner").GetItem("units").Value = 0;  
+});
+/*
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("fm"), function ()
+{
+    // var val = IR.GetPopup("settings").GetItem("volume").Value;
+    band = 'fm';
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setBand?band='+band+'']);
+    IR.GetPopup("tuner").GetItem("band").Value = 0;
+    IR.GetPopup("tuner").GetItem("units").Value = 0;  
+});
+*/
+IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("preset"), function ()
+{
+    curPopup = 'tunerPreset'
+    // var val = IR.GetPopup("settings").GetItem("volume").Value;
+    serverList.Clear();
+    createList(serverList);
+    index = 0;
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/getPresetInfo?band=common']);
+    IR.ShowPopup('server'); 
+    // driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setBand?band=am']);
+    // IR.GetPopup("tuner").GetItem("band").Value = 1;
+    // IR.GetPopup("tuner").GetItem("units").Value = 1;
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("add_preset"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/storePreset?num='+presetTunerCounter+'']);
+    if(presetTunerCounter<40)
+        presetTunerCounter++;
+    else
+        presetTunerCounter = 0;   
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("up"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=up']);
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("down"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=down']);
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("cancel"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=cancel']);
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("direct"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=direct']);
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("auto_up"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=auto_up']);
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("auto_down"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=auto_down']);
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("tp_up"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=tp_up']);
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("tuner").GetItem("tp_down"), function ()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/tuner/setFreq?band='+band+'&tuning=tp_down']);
+});
+
+
