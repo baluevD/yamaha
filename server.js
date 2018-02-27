@@ -169,9 +169,11 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                         IR.GetPopup('playback').GetItem('albumart').GetState(0).Image = '';
                     }
                 });
+                if(playInfo.usb_devicetype)
+                    IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
             }
-            if(playInfo.usb_devicetype)
-                IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
+            else
+                IR.HidePopup('playback')
             break;
         case 'settings':
             IR.Log(text);
@@ -308,6 +310,8 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("Item 1"), fun
 IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("server"), function ()
 {
     curPopup = 'server';
+    page.GetItem("aux").Value = 0;
+    page.GetItem("optical").Value = 0;
     serverList.Clear();
     createList(serverList);
     index = 0;
@@ -319,6 +323,8 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("server"), function ()
 IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("net_radio"), function ()
 {
     curPopup = 'net_radio';
+    page.GetItem("aux").Value = 0;
+    page.GetItem("optical").Value = 0;
     serverList.Clear();
     createList(serverList);
     index = 0;
@@ -330,6 +336,8 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("net_radio"), function ()
 IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("usb"), function ()
 {
     curPopup = 'usb';
+    page.GetItem("aux").Value = 0;
+    page.GetItem("optical").Value = 0;
     serverList.Clear();
     createList(serverList);
     index = 0;
@@ -341,6 +349,8 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("usb"), function ()
 IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("recent"), function ()
 {
     curPopup = 'recent';
+    page.GetItem("aux").Value = 0;
+    page.GetItem("optical").Value = 0;
     serverList.Clear();
     createList(serverList);
     index = 0;
@@ -485,6 +495,38 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup('settings').GetItem("bass_extens
         driver.Send(['GET,/YamahaExtendedControl/v1/main/setBassExtension?enable=false']);
 });
 
+IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("aux"), function ()
+{
+    if(page.GetItem("aux").Value == 1)
+    {
+        driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=aux']);
+        page.GetItem("optical").Value = 0;
+    }
+    else
+    {
+        page.GetItem("aux").Value = 1;
+    }
+
+});
+
+IR.AddListener(IR.EVENT_ITEM_PRESS, page.GetItem("optical"), function ()
+{
+    if(page.GetItem("optical").Value == 1)
+    {
+        
+        driver.Send(['GET,/YamahaExtendedControl/v1/main/setInput?input=optical']);
+        page.GetItem("aux").Value = 0;
+    }
+
+    else
+    {
+        page.GetItem("optical").Value = 1;
+        // page.GetItem("aux").Value == 0;
+    }
+
+});
+
+
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("balance"), function ()
 {
     var balance = IR.GetPopup("settings").GetItem("balance").Value;
@@ -508,3 +550,11 @@ IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("subwoofer
     var sub = IR.GetPopup("settings").GetItem("subwoofer_volume").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setSubwooferVolume?volume='+sub+'']);   
 });
+
+function checkPlayback()
+{
+    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getPlayInfo']);
+    curPopup = 'playback';
+    page.GetItem("aux").Value = 0;
+    page.GetItem("optical").Value = 0;
+}
