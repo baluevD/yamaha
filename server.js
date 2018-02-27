@@ -1,6 +1,6 @@
 var driver = IR.GetDevice("yamaha");
 var serverList = IR.GetPopup('server').GetItem('List 1');
-var page = IR.GetPage("Страница 1");
+var page = IR.GetPopup("main");
 var curPopup;
 var playInfo;
 var settingsInfo;
@@ -173,7 +173,8 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                     IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
             }
             else
-                IR.HidePopup('playback')
+                // IR.HidePopup('playback');
+                IR.ShowPopup('server');
             break;
         case 'settings':
             IR.Log(text);
@@ -201,6 +202,7 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                     IR.GetPopup('settings').GetItem("bass_extension").Value = 1;
                 if(settingsInfo.bass_extension == 'true')
                     IR.GetPopup('settings').GetItem("bass_extension").Value = 0;
+                IR.GetPopup('settings').GetItem('volume').Value = status.volume;
             }
             if(playInfo.usb_devicetype)
                 IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
@@ -211,7 +213,7 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                 page.GetItem("power").Value = 1;
             if(status.power == 'standby')
                 page.GetItem("power").Value = 0;
-            IR.GetPopup('playback').GetItem('volume').Value = status.volume;
+            // IR.GetPopup('playback').GetItem('volume').Value = status.volume;
         break;
     }
 });
@@ -230,7 +232,7 @@ function selectItem(popup,it)
         driver.Send(['GET,/YamahaExtendedControl/v1/netusb/setListControl?list_id=main&type=play&index='+it+'']);
         curPopup = 'playback';
         IR.ShowPopup("playback");
-        IR.HidePopup("server");  
+        // IR.HidePopup("server");  
     }
     index = 0;
     arr.length = 0; 
@@ -249,7 +251,9 @@ function returnUp(popup,obj)
     }
     else
     {
-        IR.HidePopup("server");
+        // IR.HidePopup("server");
+        IR.ShowPopup("main");
+        IR.GetPopup('server').GetItem('Item 2').Text = '';
         serverList.Clear();
         arr.length = 0;
         index = 0;
@@ -276,7 +280,7 @@ IR.AddListener(IR.EVENT_ITEM_SELECT,IR.GetPopup('server').GetItem('List 1'), fun
             driver.Send(['GET,/YamahaExtendedControl/v1/netusb/recallRecentItem?zone=main&num='+item+'']);
             curPopup = 'playback';
             IR.ShowPopup("playback");
-            IR.HidePopup("server");  
+            // IR.HidePopup("server");  
             index = 0;
             arr.length = 0; 
             break;
@@ -298,7 +302,9 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("server").GetItem("Item 1"), fun
             returnUp(curPopup,usbFiles);
             break;
         case 'recent':
-            IR.HidePopup("server");
+            // IR.HidePopup("server");
+            IR.ShowPopup("main");
+            IR.GetPopup('server').GetItem('Item 2').Text = '';
             serverList.Clear();
             arr.length = 0;
             index = 0;
@@ -423,15 +429,15 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("Item 11"), 
    driver.Send(['GET,/YamahaExtendedControl/v1/netusb/toggleRepeat']);  
 });
 
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("volume"), function ()
+IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("settings").GetItem("volume"), function ()
 {
-    var val = IR.GetPopup("playback").GetItem("volume").Value;
+    var val = IR.GetPopup("settings").GetItem("volume").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setVolume?volume='+val+'']);  
 });
 
-IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("playback").GetItem("volume"), function ()
+IR.AddListener(IR.EVENT_ITEM_RELEASE, IR.GetPopup("settings").GetItem("volume"), function ()
 {
-    var val = IR.GetPopup("playback").GetItem("volume").Value;
+    var val = IR.GetPopup("settings").GetItem("volume").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setVolume?volume='+val+'']);  
 });
 
@@ -457,12 +463,12 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("add_bookmar
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/manageList?list_id=main&type=add_bookmark&timeout=500']);
 });
 
-IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("volume"), function ()
+/*IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("volume"), function ()
 {
     var val = IR.GetPopup("playback").GetItem("volume").Value;
     driver.Send(['GET,/YamahaExtendedControl/v1/main/setVolume?volume='+val+'']);  
 });
-
+*/
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup('settings').GetItem("mute"), function ()
 {
     if(IR.GetPopup('settings').GetItem("mute").Value == 1)
