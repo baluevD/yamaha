@@ -158,7 +158,7 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                     IR.GetPopup('playback').GetItem('album').Text = playInfo.album;
                 if(playInfo.track)
                     IR.GetPopup('playback').GetItem('track').Text = playInfo.track;
-/*                IR.SetTimeout(500, function() 
+                IR.SetTimeout(500, function() 
                 {  
                     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/getPlayInfo']);
                     if(playInfo.albumart_url)
@@ -169,7 +169,7 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
                     {
                         IR.GetPopup('playback').GetItem('albumart').GetState(0).Image = '';
                     }
-                });*/
+                });
                 if(playInfo.usb_devicetype)
                     IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
             }
@@ -208,13 +208,6 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
             if(playInfo.usb_devicetype)
                 IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
             break;
-        default:
-/*            status = JSON.Parse(text);
-            if(status.power == 'on')
-                page.GetItem("power").Value = 1;
-            if(status.power == 'standby')
-                page.GetItem("power").Value = 0;*/
-            // IR.GetPopup('playback').GetItem('volume').Value = status.volume;
         break;
     }
 });
@@ -464,12 +457,6 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("add_bookmar
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/manageList?list_id=main&type=add_bookmark&timeout=500']);
 });
 
-/*IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("volume"), function ()
-{
-    var val = IR.GetPopup("playback").GetItem("volume").Value;
-    driver.Send(['GET,/YamahaExtendedControl/v1/main/setVolume?volume='+val+'']);  
-});
-*/
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup('settings').GetItem("mute"), function ()
 {
     if(IR.GetPopup('settings').GetItem("mute").Value == 1)
