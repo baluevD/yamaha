@@ -98,7 +98,7 @@ IR.AddListener(IR.EVENT_START,0,function()
 
 IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text) 
 {
-    //IR.Log(text);
+    IR.Log(text);
     switch(curPopup)
     {
         case 'server':
@@ -208,7 +208,14 @@ IR.AddListener(IR.EVENT_RECEIVE_TEXT, driver, function(text)
             if(playInfo.usb_devicetype)
                 IR.GetPopup('playback').GetItem('device').Text = playInfo.usb_devicetype;
             break;
-        break;
+        /*default:
+            status = JSON.Parse(text);
+            if(status.power == 'on')
+                page.GetItem("power").Value = 1;
+            if(status.power == 'standby')
+                page.GetItem("power").Value = 0;
+            // IR.GetPopup('playback').GetItem('volume').Value = status.volume;
+        break;*/
     }
 });
 
@@ -457,6 +464,12 @@ IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("add_bookmar
     driver.Send(['GET,/YamahaExtendedControl/v1/netusb/manageList?list_id=main&type=add_bookmark&timeout=500']);
 });
 
+/*IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup("playback").GetItem("volume"), function ()
+{
+    var val = IR.GetPopup("playback").GetItem("volume").Value;
+    driver.Send(['GET,/YamahaExtendedControl/v1/main/setVolume?volume='+val+'']);  
+});
+*/
 IR.AddListener(IR.EVENT_ITEM_PRESS, IR.GetPopup('settings').GetItem("mute"), function ()
 {
     if(IR.GetPopup('settings').GetItem("mute").Value == 1)
@@ -552,3 +565,85 @@ function checkPlayback()
     page.GetItem("aux").Value = 0;
     page.GetItem("optical").Value = 0;
 }
+
+
+IR.AddListener(IR.EVENT_START,0,function()
+{
+    IR.SetTimeout(2000, function() 
+    {
+
+        driver.SendEx({ 
+            Type: "GET",                                                                    
+            Url:  "/YamahaExtendedControl/v1/system/getFeatures",
+            Headers: {"X-AppName":"MusicCast/1.40(iOS)","X-AppPort": "9025"}
+        });
+    });
+});
+
+IR.AddListener(IR.EVENT_RECEIVE_TEXT, IR.GetDevice("udp"), function(text) 
+{  
+    IR.Log(text);
+    switch(curPopup)
+    {
+        case 'server':
+            serverFiles = JSON.Parse(text);
+            fillDirectory(serverFiles,curPopup);
+            break;
+        case 'net_radio':
+            IR.Log('net_radio '+text);
+            net_radioFiles = JSON.Parse(text);
+            fillDirectory(net_radioFiles,curPopup);
+            break;
+        case 'usb':
+            IR.Log('usb '+text);
+            usbFiles = JSON.Parse(text);
+            fillDirectory(usbFiles,curPopup);
+            break;
+        case 'recent':
+            IR.Log(text);
+            recentFiles = JSON.Parse(text);
+            IR.GetPopup('server').GetItem('Item 2').Text = 'History';
+            IR.GetPopup('server').GetItem('Item 2').Visible = true;
+            if(recentFiles.response_code == 0)
+            {
+                IR.GetPopup('server').GetItem('Item 1').Enable = false;
+                // if(recentFiles.recent_info[i].text)
+                // {
+                    for(var i = 0;i<recentFiles.recent_info.length;i++)
+                    {
+                        IR.Log('f'+recentFiles.recent_info[i].text);
+                        add(recentFiles.recent_info[i].text,recentFiles.recent_info[i].albumart_url,serverList);
+                        arr.push('f');                       
+                    }
+                // }
+
+            }
+            IR.GetPopup('server').GetItem('Item 1').Enable = true;
+            break;
+        case 'playback':
+            playInfo = JSON.Parse(text);
+            if(playInfo.response_code == 0)
+            {
+                if(playInfo.main.input)
+                    IR.GetPopup('playback').GetItem('input').Text = playInfo.main.input;
+                if(playInfo.natusb.play_time)
+                    IR.GetPopup('playback').GetItem('play_time').Text = playInfo.net_usb.play_time;
+            }
+/*            else
+                // IR.HidePopup('playback');
+                IR.ShowPopup('server');*/
+            break;
+        case 'settings':
+            IR.Log(text);
+            settingsInfo = JSON.Parse(text);
+            if(settingsInfo.response_code == 0)
+            {
+                if(settingsInfo.main.mute == 'false')
+                    IR.GetPopup('settings').GetItem("mute").Value = 1;
+                if(settingsInfo.main.mute == 'true')
+                    IR.GetPopup('settings').GetItem("mute").Value = 0;
+                IR.GetPopup('settings').GetItem('volume').Value = status.main.volume;
+            }
+            break;
+    }
+});
